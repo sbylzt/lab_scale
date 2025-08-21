@@ -33,7 +33,7 @@
   /* 
     使用teleport移动至设置元素所在位置
   */
-  import { ref, reactive, onMounted } from "vue";
+  import { ref, reactive, onMounted, nextTick } from "vue";
   import httpHelper from '../api/httpHelper';
   export default {
     name:'dialog_bookin',
@@ -46,13 +46,54 @@
         isable: true,
       });
       let loading = ref(true);
+      let pageSize = ref(20);
+      let currentPage = ref(1);
+      let total = ref(0);
 
       function loadData() {
         loading.value = true;
-        httpHelper.post('/labbook/lab_stock', { 'flag': 'bookin' }, function (res) {
-          data.table_data = res.data.data.data;
-          loading.value = false;
+        
+        // 使用延迟加载，避免阻塞UI
+        nextTick(() => {
+          httpHelper.post('/labbook/lab_stock', { 'flag': 'bookin' }, function (res) {
+            if (res.data && res.data.data && res.data.data.data) {
+              allDataCache.value = res.data.data.data;
+              total.value = allDataCache.value.length;
+              
+              // 模拟分页加载，只加载当前页数据
+              const startIndex = (currentPage.value - 1) * pageSize.value;
+              const endIndex = startIndex + pageSize.value;
+              data.table_data = allDataCache.value.slice(startIndex, endIndex);
+              
+              // 延迟100ms后隐藏加载状态，让UI有时间渲染
+              setTimeout(() => {
+                loading.value = false;
+              }, 100);
+            } else {
+              data.table_data = [];
+              allDataCache.value = [];
+              total.value = 0;
+              loading.value = false;
+            }
+          }).catch(() => {
+            loading.value = false;
+            data.table_data = [];
+          });
         });
+      }
+
+      let allDataCache = ref([]);
+
+      function loadMoreData() {
+        if (data.table_data.length >= total.value) return;
+        
+        currentPage.value++;
+        const startIndex = (currentPage.value - 1) * pageSize.value;
+        const endIndex = startIndex + pageSize.value;
+        
+        // 追加数据而不是替换
+        const newData = allDataCache.value.slice(startIndex, endIndex);
+        data.table_data.push(...newData);
       }
 
       function select_row(val) {
@@ -68,10 +109,13 @@
       }
 
       onMounted(() => {
-        loadData();
+        // 延迟加载数据，让对话框先渲染
+        setTimeout(() => {
+          loadData();
+        }, 100);
       });
 
-      return { data, loading, loadData, close, confirm, select_row };
+      return { data, loading, loadData, close, confirm, select_row, loadMoreData };
     },
   };
   </script>

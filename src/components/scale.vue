@@ -4,8 +4,8 @@
       <div v-if="loading" class="loading">加载中...</div>
       <el-table v-else highlight-current-row :data="scaleList" 
         @current-change="handleRowSelect"
-        style="font-size:14px"
-        :row-style="{height:'35px'}"
+        style="font-size:14px; height: calc(100vh - 20px);"
+        :row-style="{height:'50px'}"
         :header-cell-style="{
             'text-align':'center',
             'background':'#f5f7fa',
@@ -13,49 +13,143 @@
             'height':'25px',
             'font-size':'12px'
           }"
-        :cell-style="{padding:'2px','text-align':'center'}">
-        <el-table-column prop="billno" label="SN" width="85" />
-        <el-table-column prop="Recipe" label="ID" :show-overflow-tooltip="true" width="130" />
-        <el-table-column prop="Name" label="Name" :show-overflow-tooltip="true" width="130"/>
-        <el-table-column prop="QTY" label="QTY" width="80" :formatter="formatQty"/>
-        <el-table-column prop="batches" label="Set/Scaled" />
+        :cell-style="{padding:'2px','text-align':'center'}"
+        height="calc(100vh - 20px)">
+        <el-table-column width="85">
+          <template #header>
+            <div style="text-align: center;">
+              <div style="font-weight: bold; margin-bottom: 5px;">SN</div>
+            </div>
+          </template>
+          <template #default="{ row }">
+            <div style="display: flex; flex-direction: column; height: 100%;">
+              <div style="font-weight: bold;">{{ row.billno }}</div>
+
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column width="130">
+          <template #header>
+            <div style="text-align: center;">
+              <div style="font-weight: bold; margin-bottom: 5px;">ID/Name</div>
+            </div>
+          </template>
+          <template #default="{ row }">
+            <div style="font-size: 12px; color: #666;">{{ row.Recipe }}</div>
+            <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+              {{ row.Name }}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column width="80">
+          <template #header>
+            <div style="text-align: center;">
+              <div style="font-weight: bold; margin-bottom: 5px;">QTY/Batch</div>
+            </div>
+          </template>
+          <template #default="{ row }">
+            <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+              {{ formatQty(null, null, row.QTY) }}
+            </div>
+            <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+              {{ row.batches }}
+            </div> 
+          </template>
+        </el-table-column>
       </el-table>
     </div>
     <div class="right-panel">
       <div v-if="rightLoading" class="loading">加载中...</div>
       <div v-else>
         <div class="selected-info">
-          <span>ID: {{ selectedRow?.billno || '无' }}</span>
-          <span>Recipe: {{ selectedRow?.Recipe || '无' }}</span>
-          <span>Now Batch: {{ selectedRow?.batch_scaled+1 || '无' }}</span>
+          <div class="selected-info-content">
+            <span>ID: {{ selectedRow?.billno || '无' }}</span>
+            <span>Recipe: {{ selectedRow?.Recipe || '无' }}</span>
+            <span>Now Batch: {{ selectedRow?.batch_scaled+1 || '无' }}</span>
+          </div>
+          <div class="confirm-button-container">
+            <el-button type="primary" @click="handleConfirm" :disabled="!isAllRowsComplete" class="confirm-button">保存</el-button>
+          </div>
         </div>
         <el-table :data="entryList" 
           @row-dblclick="handleDblClick"
           :row-class-name="tableRowClassName"
-          style="font-size:14px;width:100%"
-          :row-style="{height:'40px'}"
+          style="font-size:14px;width:100%; "
+          :row-style="{height:'45px'}"
           :header-cell-style="{
             'text-align':'center',
             'background':'#f5f7fa',
             'color':'#606266',
-            'height':'30px'
+            'height':'40px'
           }"
           :cell-style="{
             padding:'2px',
             'text-align':'center'
           }">
-          <el-table-column type="index" label="SN" align="center" :index="indexMethod" />
-          <el-table-column prop="material" label="Material物料ID" align="center"  />
-          <el-table-column prop="m_name" label="Name物料名" align="center" :show-overflow-tooltip="true" width="120" />
-          <el-table-column prop="step" label="Step段位" align="center" />
-          <el-table-column prop="input" label="Input投料号" align="center"  />
-          <el-table-column prop="QTY" label="Target目标值" align="center"  :formatter="formatQty"/>
-          <el-table-column prop="lotid" label="LotID批次" align="center" />
-          <el-table-column prop="sqty" label="Actual实际重量" align="center" />
+          <el-table-column type="index" align="center" :index="indexMethod" width="40">
+            <template #header>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; line-height: 1.2;">SN</div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="material" align="center" :show-overflow-tooltip="true" width="120">
+            <template #header>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; line-height: 1.2;">Material</div>
+                <div style="font-size: 11px; line-height: 1.2;">物料ID</div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="m_name" align="center" :show-overflow-tooltip="true" width="120">
+            <template #header>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; line-height: 1.2;">Name</div>
+                <div style="font-size: 11px; line-height: 1.2;">物料名</div>
+              </div>
+            </template>
+          </el-table-column>
+          <!-- <el-table-column prop="step" align="center" width="50">
+            <template #header>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; line-height: 1.2;">Step</div>
+                <div style="font-size: 11px; line-height: 1.2;">段位</div>
+              </div>
+            </template>
+          </el-table-column> -->
+          <el-table-column prop="input" align="center" width="60">
+            <template #header>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; line-height: 1.2;">Input</div>
+                <div style="font-size: 11px; line-height: 1.2;">投料号</div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="QTY" align="center" :formatter="formatQty" width="85">
+            <template #header>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; line-height: 1.2;">Target</div>
+                <div style="font-size: 11px; line-height: 1.2;">目标值</div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="lotid" align="center" width="110">
+            <template #header>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; line-height: 1.2;">LotID</div>
+                <div style="font-size: 11px; line-height: 1.2;">批次</div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="sqty" align="center" >
+            <template #header>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; line-height: 1.2;">Actual</div>
+                <div style="font-size: 11px; line-height: 1.2;">实际重量</div>
+              </div>
+            </template>
+          </el-table-column>
         </el-table>
-        <div class="confirm-button-container">
-          <el-button type="primary" @click="handleConfirm" class="confirm-button">确认</el-button>
-        </div>
       </div>
     </div>
   </div>
@@ -68,7 +162,7 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage } from 'element-plus';
 import httpHelper from "../api/httpHelper";
 import ScaleDetailDialog from './scale_detail_dialog.vue';
@@ -137,22 +231,18 @@ export default {
     };
 
     const handleConfirm = () => {
-      const incompleteRows = entryList.value.filter(item => !item.lotid || !item.sqty);
-      if (incompleteRows.length > 0) {
-        alert('请确保所有批次和实际重量都已填写');
-        return;
-      }
-
-      const enrichedEntryList = entryList.value.map((item, index) => ({
-        material: item.material,
-        input: item.input,
-        lotid: item.lotid,
-        qty: item.sqty,
-        billno: selectedRow.value.billno,
-        recipe: selectedRow.value.Recipe,
-        charge: selectedRow.value.batch_scaled + 1,
-        id: `${selectedRow.value.billno}${String(selectedRow.value.batch_scaled + 1).padStart(2, '0')}${String(index + 1).padStart(3, '0')}`
-      }));
+      const enrichedEntryList = entryList.value
+        .filter(item => !item.material.startsWith('Step'))
+        .map((item, index) => ({
+          material: item.material,
+          input: item.input,
+          lotid: item.lotid,
+          qty: item.sqty,
+          billno: selectedRow.value.billno,
+          recipe: selectedRow.value.Recipe,
+          charge: selectedRow.value.batch_scaled + 1,
+          id: `${selectedRow.value.billno}${String(selectedRow.value.batch_scaled + 1).padStart(2, '0')}${String(index + 1).padStart(3, '0')}`
+        }));
 
       httpHelper.post('/labbook/lab_stock', {
         flag: 'scale_input',
@@ -187,6 +277,12 @@ export default {
       return row.sqty ? 'measured-row' : '';
     };
 
+    const isAllRowsComplete = computed(() => {
+      return entryList.value.every(item => 
+        item.material.startsWith('Step') || (item.lotid && item.sqty)
+      );
+    });
+
     onMounted(() => {
       httpHelper.post('/labbook/lab_stock', { 'flag': 'scale_list' }, (res) => {
         scaleList.value = res.data.data.map(item => ({
@@ -213,6 +309,7 @@ export default {
       handleConfirm,
       tableRowClassName,
       selectedRow,
+      isAllRowsComplete,
     };
   },
 };
@@ -227,20 +324,18 @@ export default {
 .left-panel {
   flex: 1;
   border-right: 1px solid #ddd;
-  padding: 10px;
   overflow-y: auto;
 }
 
 .right-panel {
   flex: 2;
-  padding: 10px;
-  height: 100%;
+  height: 98%;
   overflow: hidden;
   position: relative; /* 添加相对定位 */
 }
 
 .right-panel .el-table {
-  max-height: calc(100vh - 160px); /* 调整高度，避免覆盖确认按钮 */
+  max-height: calc(100vh - 30px); /* 调整高度，避免覆盖确认按钮 */
   overflow-y: auto;
 }
 
@@ -273,30 +368,40 @@ export default {
 }
 
 .selected-info {
-  margin-bottom: 10px;
-  font-size: 30px;
+  margin-bottom: 5px;
+  font-size: 20px;
   color: #333;
   background-color: #f0b791; /* 添加橙色背景 */
-  padding: 10px; /* 添加内边距使背景更美观 */
+  padding: 5px; /* 添加内边距使背景更美观 */
   border-radius: 4px; /* 添加圆角 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.selected-info span {
+
+.selected-info-content {
+  text-align: left;
+}
+
+.selected-info-content span {
   margin-right: 15px;
 }
 
 .confirm-button-container {
-  position: absolute;
-  bottom: 20px;
-  right: 0;
-  left: 0;
-  margin: auto;
-  text-align: center;
-  width: fit-content; /* 宽度适应内容 */
+  display: flex;
+  align-items: center;
 }
 
 .confirm-button {
-  font-size: 40px;
-  padding: 30px 60px;
-  min-width: 200px; /* 确保按钮最小宽度 */
+  font-size: 20px;
+  padding: 5px 15px;
+  min-width: 120px;
+  height: 40px;
+}
+
+.confirm-button:disabled {
+  background-color: #909399;
+  border-color: #909399;
+  color: #c0c4cc;
 }
 </style>

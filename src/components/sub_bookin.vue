@@ -1,18 +1,26 @@
 <template>
     <div class="class1">
         <h1 style="background-color:lightgreen;height:40px;line-height: 40px;">Book In 入库</h1>
-        <el-row>
-            <el-col :span="24">
-                <el-descriptions   :column="1" size="default" border>
-                <el-descriptions-item 
-                v-for="(val,key) in recipe_info" 
-                :label="key"
-                align="center" label-align="center">
-                {{val}}
-                </el-descriptions-item>
-                </el-descriptions>
-            </el-col>
-        </el-row>
+        <div class="recipe-info-container">
+            <!-- 标题行 -->
+            <div class="recipe-info-row recipe-info-header">
+                <div 
+                    v-for="(val, key) in recipe_info" 
+                    :key="key + '-header'" 
+                    class="recipe-info-cell recipe-info-title">
+                    {{ key }}
+                </div>
+            </div>
+            <!-- 内容行 -->
+            <div class="recipe-info-row recipe-info-content">
+                <div 
+                    v-for="(val, key) in recipe_info" 
+                    :key="key + '-content'" 
+                    class="recipe-info-cell recipe-info-value">
+                    {{ val }}
+                </div>
+            </div>
+        </div>
         <!-- <el-row style="height: 100px;"></el-row> -->
         <el-row>
             <el-form :inline="true" :model="formInline" class="demo-form-inline" size="large" :rules="formInline.rules" ref="dataForm">
@@ -31,10 +39,19 @@
                     </el-select>
                 </el-form-item>            
                 <el-form-item label="Remark 备注" style="width:100%">
-                    <el-input class="remark" v-model="formInline.remark" placeholder="Remark 备注" type="textarea" resize="none" :rows="2"/>
+                    <el-input class="remark" v-model="formInline.remark" placeholder="Remark 备注" type="textarea" resize="none" :rows="1"/>
                 </el-form-item>                 
             </el-form> 
-            <div class="sub_tab"><tab_edit ref="tab_edit_data"/></div>
+            <div class="sub_tab">
+                <Suspense>
+                    <template #default>
+                        <tab_edit ref="tab_edit_data"/>
+                    </template>
+                    <template #fallback>
+                        <div class="loading">加载中...</div>
+                    </template>
+                </Suspense>
+            </div>
         </el-row>
         <el-button class="submit" type="success" @click="onSubmit" size="large">Commit 提交</el-button>  
         
@@ -42,11 +59,12 @@
 </template>
   
 <script>
-import { ref,reactive} from 'vue';
+import { ref, reactive, defineAsyncComponent } from 'vue';
 import httpHelper from '../../src/api/httpHelper';
 import { alertProps, ElMessageBox } from 'element-plus';
 import { ElMessage } from 'element-plus';
-import tab_edit from "./tab_edit.vue";
+
+const tab_edit = defineAsyncComponent(() => import('./tab_edit.vue'));
 
  export default{
     name:'sub_bookin',
@@ -70,148 +88,18 @@ import tab_edit from "./tab_edit.vue";
         },
       });
       const options=reactive({
-        'place':[
-            {
-            value:'LA',
-            label:'LA',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LB',
-            label:'LB',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LC',
-            label:'LC',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LD',
-            label:'LD',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LE',
-            label:'LE',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LF',
-            label:'LF',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LG',
-            label:'LG',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LH',
-            label:'LH',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LI',
-            label:'LI',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LJ',
-            label:'LJ',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LK',
-            label:'LK',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LL',
-            label:'LL',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LM',
-            label:'LM',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-                {
-            value:'LN',
-            label:'LN',
-            children:[
-                {value:'01',
-                label:'01'},
-                {value:'02',
-                label:'02'},
-                {value:'03',
-                label:'03'},]},
-        ],
+        'place': Array.from({ length: 14 }, (_, i) => {
+          const letter = String.fromCharCode(65 + i); // A, B, C, ..., N
+          return {
+            value: `L${letter}`,
+            label: `L${letter}`,
+            children: [
+              { value: '01', label: '01' },
+              { value: '02', label: '02' },
+              { value: '03', label: '03' }
+            ]
+          };
+        }),
         'user':['Xue Guo','Li Mingyao','Zhou Mianqing'],
     });
 
@@ -269,8 +157,54 @@ import tab_edit from "./tab_edit.vue";
     .sub_tab{
         background-color:lightgray;
         width: 100%;
-        margin: 10px;
-        padding:10px;
+        margin: 5px;
+        padding:5px;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 10px;
+        font-size: 16px;
+        color: #666;
+    }
+
+    .recipe-info-container {
+        margin: 10px 0;
+        border: 1px solid #ebeef5;
+        border-radius: 4px;
+    }
+
+    .recipe-info-row {
+        display: flex;
+        align-items: center;
+    }
+
+    .recipe-info-header {
+        background-color: #f5f7fa;
+        border-bottom: 1px solid #ebeef5;
+    }
+
+    .recipe-info-cell {
+        flex: 1;
+        padding: 5px 5px;
+        text-align: center;
+        border-right: 1px solid #ebeef5;
+        word-break: break-all;
+    }
+
+    .recipe-info-cell:last-child {
+        border-right: none;
+    }
+
+    .recipe-info-title {
+        font-weight: bold;
+        color: #606266;
+        font-size: 14px;
+    }
+
+    .recipe-info-value {
+        color: #303133;
+        font-size: 14px;
     }
 </style>
   

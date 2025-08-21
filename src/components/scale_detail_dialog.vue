@@ -1,7 +1,22 @@
 <template>
   <div class="dialog-mask">
     <div class="dialog-content">
-      <h3 class="dialog-title">称量详情</h3>
+      <div class="dialog-header">
+        <h3 class="dialog-title">称量详情</h3>
+        <div class="qr-code">
+          <QrcodeVue
+            :value="qrtext" 
+            :size="60" 
+          />
+        </div>     
+        <div class="qr-code">
+          <QrcodeVue
+            :value="qrqty" 
+            :size="60" 
+          />
+        </div>
+        
+      </div>
       <div class="form-item">
         <label>M_ID 物料ID:</label>
         <span>{{ detailData.material }}</span>
@@ -58,8 +73,10 @@
       </div>
       <div class="dialog-footer">
         <h3 class="message" :class="messageType">{{ message }}</h3>
-        <el-button @click="$emit('close')">取消</el-button>
-        <el-button type="primary" @click="handleConfirm">确定</el-button>
+        <div class="footer-buttons">
+          <el-button type="primary" class="center-button" @click="handleConfirm">确定</el-button>
+          <el-button @click="$emit('close')" class="right-button">取消</el-button>
+        </div>
       </div>
     </div>
   </div>
@@ -67,6 +84,7 @@
 
 <script>
 import { ref, reactive, nextTick, onMounted } from 'vue';
+import QrcodeVue from 'qrcode.vue';
 
 export default {
   props: {
@@ -76,10 +94,13 @@ export default {
     }
   },
   emits: ['close', 'confirm'],
+  components:{QrcodeVue},
   setup(props, { emit }) {
     const message = ref('提示信息');
     const messageType = ref('normal');
     const errorMessage = ref('');
+    const qrtext = ref(`${props.detailData.material};${props.detailData.m_name};lot_test;01/01/2025;12/12/2025;100`) ;
+    const qrqty = ref(String(Number(props.detailData.QTY+0.05) ));
     const form = reactive({
       lotid: '',
       sqty: '',
@@ -101,6 +122,10 @@ export default {
       nextTick(() => {
         if (lotidInput.value) {
           lotidInput.value.focus();
+          lotidInput.value.input.readOnly = true;
+          setTimeout(() => {
+            lotidInput.value.input.readOnly = false;
+          }, 200);
         }
       });
     });
@@ -136,14 +161,16 @@ export default {
         return;
       }
       
-      const deviation = Math.abs(targetQty - actualQty) / targetQty * 100;
-      if (deviation > 50) {
-        setError('实际重量与目标重量偏差超过50%，请检查');
+      const deviation = Math.abs(targetQty - actualQty);
+      if (deviation > 0.1) {
+        setError('实际重量与目标重量偏差超过±0.1，请检查');
         form.sqty = '';
         return;
       }
 
       setSuccess('实际重量验证通过');
+      form.sqty = actualQty.toFixed(3);
+      handleConfirm();
     };
 
     const handleConfirm = () => {
@@ -175,7 +202,7 @@ export default {
     const handleLotIdScan = () => {
       const parts = form.tempInput.split(';');
       console.log('Scanned QR Code:', parts);
-      if (parts.length !== 7) {
+      if (parts.length < 6) {
         setError('二维码格式错误，请重新扫描');
         form.tempInput = '';
         return;
@@ -195,17 +222,22 @@ export default {
       }
 
       lifetimeValid.value = isValidDate(lifetime) && isNotExpired(lifetime);
-      // lifetimeValid.value = isValidDate(lifetime) ;
       if (!lifetimeValid.value) {
         setError('批号已过期或日期格式无效');
         form.tempInput = '';
         return;
       }
       
-      setSuccess('扫描通过'); // 添加成功提示
+      setSuccess('扫描通过');
       form.lotid = lotid;
       nextTick(() => {
-        sqtyInput.value?.focus();
+        if (sqtyInput.value) {
+          sqtyInput.value.focus();
+          sqtyInput.value.input.readOnly = true;
+          setTimeout(() => {
+            sqtyInput.value.input.readOnly = false;
+          }, 200);
+        }
       });
     };
 
@@ -216,6 +248,8 @@ export default {
       scannedInfo,
       matMatch,
       lifetimeValid,
+      qrtext,
+      qrqty,
       formatQty,
       handleConfirm,
       handleLotIdScan,
@@ -244,64 +278,99 @@ export default {
 
 .dialog-content {
   background: white;
-  padding: 40px;
+  padding: 20px;
   border-radius: 8px;
-  width: 800px;
-  min-height: 600px;
+  width: 600px;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .dialog-title {
-  font-size: 24px;
-  margin-bottom: 30px;
-  text-align: center;
+  font-size: 25px;
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .form-item {
-  margin-bottom: 30px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   font-size: 30px;
-}
-
-.form-item label {
-  width: 300px;
-  text-align: right;
-  margin-right: 100px;
   font-weight: bold;
 }
 
+.form-item label {
+  width: 230px;
+  text-align: right;
+  margin-right: 20px;
+  flex-shrink: 0;  
+  color: rgb(150, 149, 149);
+}
+
 .form-item .el-input {
-  width: 300px;
-  font-size: 30px;
-  height: 50px; /* 增加高度 */
+  width: 200px;
+  font-size: 18px;
+  height: 36px;
+  font-weight: bold;
 }
 
 .dialog-footer {
-  text-align: right;
-  margin-top: 40px;
+  margin-top: auto;
+  padding-top: 10px;
+  flex-shrink: 0;
+}
+
+.footer-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.center-button {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 30px;
+  padding: 16px 32px;
+  min-width: 120px;
+  min-height: 40px;
+}
+
+.right-button {
+  margin-left: auto;
 }
 
 .dialog-footer button {
-  font-size: 18px;
-  padding: 12px 25px;
-  margin-left: 20px;
+  font-size: 24px;
+  padding: 12px 24px;
 }
 
 .lotid-input-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 300px;
+  gap: 5px;
+  width: 200px;
 }
 
 .scan-info {
   background: #f5f7fa;
   border-radius: 4px;
-  font-size: 25px;
+  font-size: 16px;
   display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin-bottom: 20px; /* 添加与 form-item 一致的下边距 */
+  justify-content: flex-start;
+  gap: 15px;
+  margin-bottom: 12px;
+  padding: 8px;
+  flex-wrap: wrap;
 }
 
 .scan-item {
@@ -326,10 +395,10 @@ export default {
 }
 
 .message {
-  margin: 0 0 10px 0;
-  padding: 8px;
+  margin: 0 0 8px 0;
+  padding: 6px;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 18px;
   text-align: center;
 }
 
