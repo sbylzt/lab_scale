@@ -74,6 +74,7 @@
       <div class="dialog-footer">
         <h3 class="message" :class="messageType">{{ message }}</h3>
         <div class="footer-buttons">
+          <el-button type="danger" @click="handleManual" class="left-button">手动</el-button>
           <el-button type="primary" class="center-button" @click="handleConfirm">确定</el-button>
           <el-button @click="$emit('close')" class="right-button">取消</el-button>
         </div>
@@ -173,6 +174,15 @@ export default {
       handleConfirm();
     };
 
+    const handleManual = () => {
+      emit('confirm', {
+        ...props.detailData,
+        lotid: 'other',
+        sqty: 0
+      });
+      emit('close');
+    };
+
     const handleConfirm = () => {
       if (!form.lotid || !form.sqty) {
         setError('请填写完整信息');
@@ -254,6 +264,7 @@ export default {
       handleConfirm,
       handleLotIdScan,
       handleQtyValidate,
+      handleManual,
       errorMessage,
       message,
       messageType
@@ -344,6 +355,8 @@ export default {
   min-width: 120px;
   min-height: 40px;
 }
+
+
 
 .right-button {
   margin-left: auto;

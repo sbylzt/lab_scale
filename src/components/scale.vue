@@ -279,7 +279,7 @@ export default {
 
     const isAllRowsComplete = computed(() => {
       return entryList.value.every(item => 
-        item.material.startsWith('Step') || (item.lotid && item.sqty)
+        item.material.startsWith('Step') || (item.lotid && item.sqty>=0)
       );
     });
 

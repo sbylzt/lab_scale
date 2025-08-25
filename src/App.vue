@@ -4,7 +4,7 @@
     <div class="block"></div>
   <h1>Lab Mixing Recorder</h1>
   <h1>实验室密炼记录</h1>
-  <h3>V1.1 Designer:ZLU</h3>
+  <h3>V1.2 Designer:ZLU</h3>
     <div class="password-container">
       <input class="pw" v-model="pw" placeholder="Password" type="password"/>
     </div>
@@ -32,7 +32,7 @@ export default {
     const router = useRouter();
     
     const islock = ref(true);
-    const pw = ref('88556000');
+    const pw = ref('');
 
     const lock = () => {
       islock.value = true;
