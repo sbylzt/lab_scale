@@ -1,10 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Booking from '../components/booking.vue';
 import Scale from '../components/scale.vue';
+import App from '../App.vue';
 
 const routes = [
   {
-    path: '/',
+    path: '/Booking',
     name: 'Booking',
     component: Booking,
   },
@@ -12,6 +13,11 @@ const routes = [
     path: '/scale',
     name: 'Scale',
     component: Scale,
+  },
+  {
+    path: '/',
+    name: 'App',
+    component: App,
   },
 ];
 

@@ -1,64 +1,76 @@
 <template>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <div v-if="data.islock" class="lock_mask">
+  <div v-if="islock" class="lock_mask">
     <div class="block"></div>
   <h1>Lab Mixing Recorder</h1>
   <h1>实验室密炼记录</h1>
   <h3>V1.1 Designer:ZLU</h3>
     <div class="password-container">
-      <input class="pw" v-model="data.pw" placeholder="Password" type="password"/>
+      <input class="pw" v-model="pw" placeholder="Password" type="password"/>
     </div>
     <div class="button-container">
-      <button class="btn_pw" @click="data.unlock">Booking出入库</button>
-      <button class="btn_pw" @click="data.goToScale">Scale称量</button>
+      <button class="btn_pw" @click="unlock">Booking出入库</button>
+      <button class="btn_pw" @click="goToScale">Scale称量</button>
     </div>
   </div>
-
-  <div id="app" @click="data.isdo">
-    <router-view v-if="!data.islock"></router-view>
-  </div>
+  <router-view v-if="!islock"></router-view>
+  <!-- <div id="app" @click="isdo">
+    <router-view v-if="!islock"></router-view>
+  </div> -->
 </template>
 
 <script>
-import { ref, reactive } from 'vue';
-import { useRouter } from 'vue-router'; // 确保正确导入 vue-router
-import booking from './components/booking.vue';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+// import booking from './components/booking.vue';
+// import Scale from './components/scale.vue';
 
 export default {
   name: 'App',
-  components: { booking },
+  // components: { booking, Scale },
   setup() {
-    const router = useRouter(); // 确保 router 正常使用
-    let data = reactive({
-      islock: true,
-      isscale: false,
-      pw: '88556000',
-      lock: () => { data.islock = true; data.pw = ''; },
-      unlock: () => {
-        if (data.pw == '88556000') {
-          data.islock = false;
-          router.push('/'); // 确保路径与路由配置一致
-        } else {
-          alert('Wrong Password');
-        }
-      },
-      goToScale:() => {
-        if (data.pw == '88556000') {
-          data.islock = false;
-          data.isscale = true;
-          router.push('/scale'); // 确保路径与路由配置一致
-        } else {
-          alert('Wrong Password');
-        }
-      },
-      isdo: () => {
-        data.islock = false;
-        data.pw = '';
-      }
-    });
+    const router = useRouter();
+    
+    const islock = ref(true);
+    const pw = ref('88556000');
 
-    return { data };  // 只返回data，移除goToScale
-  },
+    const lock = () => {
+      islock.value = true;
+      pw.value = '';
+    };
+
+    const unlock = () => {
+      if (pw.value === '88556000') {
+        islock.value = false;
+        router.push('/Booking');
+      } else {
+        alert('Wrong Password');
+      }
+    };
+
+    const goToScale = () => {
+      if (pw.value === '88556000') {
+        islock.value = false;
+        router.push('/scale');
+      } else {
+        alert('Wrong Password');
+      }
+    };
+
+    const isdo = () => {
+      islock.value = false;
+      pw.value = '';
+    };
+
+    return {
+      islock,
+      pw,
+      lock,
+      unlock,
+      goToScale,
+      isdo
+    };
+  }
 };
 </script>
 <style>

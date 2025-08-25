@@ -1,5 +1,5 @@
 <template>
-  <el-container @click="timelock.isdo">
+  <el-container @click="resetTimer" @mousemove="resetTimer" @keypress="resetTimer">
     <el-aside  width="150px">
       <el-row><button  class="btn1" @click="display.open_dia_bookin">Book In 入库</button></el-row>
       <el-row><button class="btn2" @click="display.open_dia_bookout">Book Out 出库</button></el-row>      
@@ -14,7 +14,8 @@
   </template>
   
   <script>
-  import { ref,reactive,onMounted} from 'vue';
+  import { ref,reactive,onMounted,onUnmounted } from 'vue';
+  import { useRouter } from 'vue-router';
   import dialog_bookin from "./dialog_bookin.vue";
   import dialog_bookout from "./dialog_bookout.vue";
   import sub_bookin from "./sub_bookin.vue";
@@ -27,26 +28,30 @@
     emits:['lock'],
     setup(props,context){
       let recipe_info=ref(null);
-      let timelock=reactive({
-        last_time:null,
-        current_time:null,
-        time_out:600000,
-        isdo:()=>{
-          timelock.current_time=new Date().getTime();
-          if(timelock.current_time-timelock.last_time>timelock.time_out){
-            context.emit("lock");
-            console.log('lock')
-          }else{
-            timelock.last_time=new Date().getTime()
-            console.log('unlock')
-          }
+      let timer = null;
+      const TIMEOUT = 600000; // 10分钟
+      const router = useRouter();
+
+      // 重置定时器
+      const resetTimer = () => {
+        if (timer) {
+          clearTimeout(timer);
         }
+        timer = setTimeout(() => {
+          router.push('/'); // 直接跳回首页
+          // console.log('Auto locked after 10 minutes');
+        }, TIMEOUT);
+      };
+
+      onMounted(() => {
+        resetTimer(); // 页面加载时启动定时器
       });
 
-      onMounted(()=>{
-        timelock.last_time=new Date().getTime()
-        console.log( timelock.last_time)
-      })
+      onUnmounted(() => {
+        if (timer) {
+          clearTimeout(timer); // 清理定时器
+        }
+      });
 
       const display=reactive({
         dia_bookin:false,
@@ -87,7 +92,7 @@
         close_sub_bookout:()=>{display.sub_bookout=false;},
       });
 
-      return {display,recipe_info,timelock,onMounted}
+      return {display,recipe_info,resetTimer,onMounted}
     },
   }
   </script>
